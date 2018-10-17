@@ -1,6 +1,6 @@
 #include <iostream>
 #include "hashmap.h"
-
+#include "rbtree.h"
 void TestHashMap() {
     SmallHashMap<char, int> letter_counts;
     letter_counts['a'] = 27;
@@ -32,8 +32,21 @@ void TestHashMap() {
         std::cout << pair.second << " occurrences of word '" << pair.first << "'\n";
     }
 }
-
+void TestRBTree() {
+    RBTree<int, int> tree;
+    for (int i = 0; i < 20; i++) {
+        tree.Put(i, i);
+    }
+    tree.Remove(15);
+    tree.Remove(10);
+    tree.Remove(3);
+    auto print = [](const int& val) {
+        std::cout << val << std::endl;
+    };
+    tree.Traverse(print);
+}
 int main() {
-    TestHashMap();
+//    TestHashMap();
+    TestRBTree();
     return 0;
 }

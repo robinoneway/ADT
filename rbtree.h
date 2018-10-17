@@ -3,25 +3,24 @@
 #include <exception>
 #include <memory>
 
-class key_not_found : public std::exception {
-   public:
+class KeyNotFound : public std::exception {
+public:
     virtual const char *what() const throw() {
         return "Key does not exist in tree";
     }
 };
-
 template <typename Key, typename Value>
-class rbtree {
-   private:
+class RBTree {
+private:
     enum { BLACK = false, RED = true };
 
     class Node {
-       public:
-        Key key;                      // key
-        Value value;                  // its associated data
-        std::unique_ptr<Node> left;   // left...
-        std::unique_ptr<Node> right;  // ...and right subtrees
-        bool color;                   // color of parent link
+    public:
+        Key key;      // key
+        Value value;  // its associated data
+        Node *left;   // left...
+        Node *right;  // ...and right subtrees
+        bool color;   // color of parent link
 
         Node(Key key, Value value) {
             this->key = key;
@@ -30,84 +29,84 @@ class rbtree {
         }
     };
 
-    std::unique_ptr<Node> root;  // root of the BST
+    Node *root;  // root of the BST
 
-    Value get(Node *p, Key key);
+    Value Get(Node *p, Key key);
 
-    Node *getInOrderSuccessorNode(Node *p);
+    Node *GetInOrderSuccessorNode(Node *p);
 
-    void DestroyTree(std::unique_ptr<Node> &root);
+    void DestroyTree(Node *root);
 
     /*
-     * Returns minimum key of subtree rooted at p
+     * Returns Minimum key of subtree rooted at p
      */
-    Key min(Node *p) { return (p->left == nullptr) ? p->key : min(p->left); }
+    Key Min(Node *p) { return (p->left == nullptr) ? p->key : Min(p->left); }
 
-    Key max(Node *p) { return (p->right == nullptr) ? p->key : max(p->right); }
+    Key Max(Node *p) { return (p->right == nullptr) ? p->key : Max(p->right); }
 
-    Node *insert(Node *p, Key key, Value value);
+    Node *Insert(Node *p, Key key, Value value);
 
-    bool isRed(Node *p) { return (p == nullptr) ? false : (p->color == RED); }
+    bool IsRed(Node *p) { return (p == nullptr) ? false : (p->color == RED); }
 
-    void colorFlip(Node *p) {
+    void ColorFlip(Node *p) {
         p->color = !p->color;
         p->left->color = !p->left->color;
         p->right->color = !p->right->color;
     }
 
-    Node *rotateLeft(Node *p);
-    Node *rotateRight(Node *p);
+    Node *RotateLeft(Node *p);
+    Node *RotateRight(Node *p);
 
-    Node *moveRedLeft(Node *p);
-    Node *moveRedRight(Node *p);
+    Node *MoveRedLeft(Node *p);
+    Node *MoveRedRight(Node *p);
 
-    Node *deleteMax(Node *p);
-    Node *deleteMin(Node *p);
+    Node *DeleteMax(Node *p);
+    Node *DeleteMin(Node *p);
 
-    Node *fixUp(Node *p);
+    Node *FixUp(Node *p);
 
-    Node *remove(std::unique_ptr<Node> &p, Key key);
+    Node *Remove(Node *p, Key key);
 
     template <typename Functor>
-    void traverse(Functor f, Node *root);
+    void Traverse(Functor f, Node *root);
 
-   public:
+public:
     // The default unique_ptr constructor sets the uderlying pointer to nullptr
 
-    explicit rbtree() {}
+    explicit RBTree() {}
 
-    ~rbtree() { DestroyTree(root); }
+    ~RBTree() { DestroyTree(root); }
 
-    bool contains(Key key) { return get(key) != nullptr; }
+    bool Contains(Key key) { return Get(key) != nullptr; }
 
-    Value get(Key key) { return get(root, key); }
+    Value Get(Key key) { return Get(root, key); }
 
-    void put(Key key, Value value) {
-        root = insert(root, key, value);
+    void Put(Key key, Value value) {
+        root = Insert(root, key, value);
         root->color = BLACK;
     }
 
     template <typename Functor>
-    void traverse(Functor f);
+    void Traverse(Functor f);
 
-    Key min() { return (root == nullptr) ? nullptr : min(root); }
+    Key Min() { return (root == nullptr) ? nullptr : Min(root); }
 
-    Key max() { return (root == nullptr) ? nullptr : max(root); }
+    Key Max() { return (root == nullptr) ? nullptr : Max(root); }
 
-    void deleteMin() {
-        root = deleteMin(root);
+    void DeleteMin() {
+        root = DeleteMin(root);
         root->color = BLACK;
     }
 
-    void deleteMax() {
-        root = deleteMax(root);
+    void DeleteMax() {
+        root = DeleteMax(root);
         root->color = BLACK;
     }
 
-    void remove(Key key) {
+    void Remove(Key key) {
         if (root == nullptr) return;
 
-        root = remove(root, key);
+        root = Remove(root, key);
 
         if (root != nullptr) {
             root->color = BLACK;
@@ -118,20 +117,22 @@ class rbtree {
 /*
  *  Do post order traversal deleting underlying pointer.
  */
-//--template<typename Key, typename Value> void rbtree<Key,
-//Value>::DestroyTree(Node *current)
+//--template<typename Key, typename Value> void RBTree<Key,
+// Value>::DestroyTree(Node *current)
 template <typename Key, typename Value>
-void rbtree<Key, Value>::DestroyTree(std::unique_ptr<Node> &current) {
-    if (current.get() == nullptr) return;
+void RBTree<Key, Value>::DestroyTree(Node *current) {
+    if (current == nullptr) return;
 
     DestroyTree(current->left);
     DestroyTree(current->right);
-
-    current.reset();
+    if (current) {
+        delete current;
+        current = nullptr;
+    }
 }
 
 template <typename Key, typename Value>
-typename rbtree<Key, Value>::Node *rbtree<Key, Value>::rotateLeft(Node *p) {
+typename RBTree<Key, Value>::Node *RBTree<Key, Value>::RotateLeft(Node *p) {
     // Make a right-leaning 3-node lean to the left.
     Node *x = p->right;
 
@@ -147,7 +148,7 @@ typename rbtree<Key, Value>::Node *rbtree<Key, Value>::rotateLeft(Node *p) {
 }
 
 template <typename Key, typename Value>
-typename rbtree<Key, Value>::Node *rbtree<Key, Value>::rotateRight(Node *p) {
+typename RBTree<Key, Value>::Node *RBTree<Key, Value>::RotateRight(Node *p) {
     // Make a left-leaning 3-node lean to the right.
     Node *x = p->left;
 
@@ -163,91 +164,94 @@ typename rbtree<Key, Value>::Node *rbtree<Key, Value>::rotateRight(Node *p) {
 }
 
 template <typename Key, typename Value>
-typename rbtree<Key, Value>::Node *rbtree<Key, Value>::moveRedLeft(Node *p) {
-    // Assuming that p is red and both p->left and p->left->left
+typename RBTree<Key, Value>::Node *RBTree<Key, Value>::MoveRedLeft(Node *p) {
+    // AssuMing that p is red and both p->left and p->left->left
     // are black, make p->left or one of its children red
-    colorFlip(p);
+    ColorFlip(p);
 
-    if (isRed(p->right->left)) {
-        p->right = rotateRight(p->right);
+    if (IsRed(p->right->left)) {
+        p->right = RotateRight(p->right);
 
-        p = rotateLeft(p);
+        p = RotateLeft(p);
 
-        colorFlip(p);
+        ColorFlip(p);
     }
     return p;
 }
 
 template <typename Key, typename Value>
-typename rbtree<Key, Value>::Node *rbtree<Key, Value>::moveRedRight(Node *p) {
-    // Assuming that p is red and both p->right and p->right->left
+typename RBTree<Key, Value>::Node *RBTree<Key, Value>::MoveRedRight(Node *p) {
+    // AssuMing that p is red and both p->right and p->right->left
     // are black, make p->right or one of its children red
-    colorFlip(p);
+    ColorFlip(p);
 
-    if (isRed(p->left->left)) {
-        p = rotateRight(p);
-        colorFlip(p);
+    if (IsRed(p->left->left)) {
+        p = RotateRight(p);
+        ColorFlip(p);
     }
     return p;
 }
 
 template <typename Key, typename Value>
-typename rbtree<Key, Value>::Node *rbtree<Key, Value>::fixUp(Node *p) {
-    if (isRed(p->right)) p = rotateLeft(p);
+typename RBTree<Key, Value>::Node *RBTree<Key, Value>::FixUp(Node *p) {
+    if (IsRed(p->right)) p = RotateLeft(p);
 
-    if (isRed(p->left) && isRed(p->left->left)) p = rotateRight(p);
+    if (IsRed(p->left) && IsRed(p->left->left)) p = RotateRight(p);
 
-    if (isRed(p->left) && isRed(p->right))  // four node
-        colorFlip(p);
+    if (IsRed(p->left) && IsRed(p->right))  // four node
+        ColorFlip(p);
 
     return p;
 }
 
 template <typename Key, typename Value>
-typename rbtree<Key, Value>::Node *rbtree<Key, Value>::deleteMax(Node *p) {
-    if (isRed(p->left)) p = rotateRight(p);
+typename RBTree<Key, Value>::Node *RBTree<Key, Value>::DeleteMax(Node *p) {
+    if (IsRed(p->left)) p = RotateRight(p);
 
     if (p->right == nullptr) return nullptr;
 
-    if (!isRed(p->right) && !isRed(p->right->left)) p = moveRedRight(p);
+    if (!IsRed(p->right) && !IsRed(p->right->left)) p = MoveRedRight(p);
 
-    p->right = deleteMax(p->right);
+    p->right = DeleteMax(p->right);
 
-    return fixUp(p);
+    return FixUp(p);
 }
 
 template <typename Key, typename Value>
-typename rbtree<Key, Value>::Node *rbtree<Key, Value>::deleteMin(Node *p) {
+typename RBTree<Key, Value>::Node *RBTree<Key, Value>::DeleteMin(Node *p) {
     if (p->left == nullptr) {
         // http://www.teachsolaisgames.com/articles/balanced_left_leaning.html,
         // another C++ implementation, that p's underlying pointer must be
         // deleted.
-        p.reset();
+        if (p) {
+            delete p;
+            p = nullptr;
+        }
         return nullptr;
     }
 
-    if (!isRed(p->left) && !isRed(p->left->left)) p = moveRedLeft(p);
+    if (!IsRed(p->left) && !IsRed(p->left->left)) p = MoveRedLeft(p);
 
-    p->left = deleteMin(p->left);
+    p->left = DeleteMin(p->left);
 
-    return fixUp(p);
+    return FixUp(p);
 }
 
 template <typename Key, typename Value>
-//--typename rbtree<Key, Value>::Node *rbtree<Key, Value>::remove(Node *p, Key
-//key)
-typename rbtree<Key, Value>::Node *rbtree<Key, Value>::remove(
-    std::unique_ptr<Node> &p, Key key) {
+//--typename RBTree<Key, Value>::Node *RBTree<Key, Value>::Remove(Node *p, Key
+// key)
+typename RBTree<Key, Value>::Node *RBTree<Key, Value>::Remove(Node *p,
+                                                              Key key) {
     if (key < p->key) {
-        if (!isRed(p->left) && !isRed(p->left->left)) {
-            p = moveRedLeft(p);
+        if (!IsRed(p->left) && !IsRed(p->left->left)) {
+            p = MoveRedLeft(p);
         }
 
-        p->left = remove(p->left, key);
+        p->left = Remove(p->left, key);
 
     } else {
-        if (isRed(p->left)) {
-            p = rotateRight(p);
+        if (IsRed(p->left)) {
+            p = RotateRight(p);
         }
 
         if ((key == p->key) && (p->right == nullptr)) {
@@ -255,29 +259,32 @@ typename rbtree<Key, Value>::Node *rbtree<Key, Value>::remove(
              * http://www.teachsolaisgames.com/articles/balanced_left_leaning.html
              * Taken from the LeftLeaningRedBlack::DeleteRec method
              */
-            p.reset();
+            if (p) {
+                delete p;
+                p = nullptr;
+            }
             return nullptr;
         }
 
-        if (!isRed(p->right) && !isRed(p->right->left)) {
-            p = moveRedRight(p);
+        if (!IsRed(p->right) && !IsRed(p->right->left)) {
+            p = MoveRedRight(p);
         }
 
         if (key == p->key) {
             /* added instead of code above */
-            Node *successor = getInOrderSuccessorNode(p);
+            Node *successor = GetInOrderSuccessorNode(p);
             p->value =
                 successor->value;  // Assign p in-order successor key and value
             p->key = successor->key;
 
-            p->right = deleteMin(p->right);
+            p->right = DeleteMin(p->right);
 
         } else {
-            p->right = remove(p->right, key);
+            p->right = Remove(p->right, key);
         }
     }
 
-    return fixUp(p);
+    return FixUp(p);
 }
 
 /*
@@ -285,12 +292,12 @@ typename rbtree<Key, Value>::Node *rbtree<Key, Value>::remove(
  * rooted at p.
  */
 template <typename Key, typename Value>
-Value rbtree<Key, Value>::get(Node *p, Key key) {
+Value RBTree<Key, Value>::Get(Node *p, Key key) {
     /* alternate recursive code
        if (p == 0) {   ValueNotFound(key);}
        if (key == p->key) return p->value;
-       if (key < p->key)  return get(p->left,  key);
-       else              return get(p->right, key);
+       if (key < p->key)  return Get(p->left,  key);
+       else              return Get(p->right, key);
     */
     // non-recursive version
     while (p != nullptr) {
@@ -302,12 +309,12 @@ Value rbtree<Key, Value>::get(Node *p, Key key) {
             return p->value;
     }
 
-    throw key_not_found();
+    throw KeyNotFound();
 }
 
 template <typename Key, typename Value>
-inline typename rbtree<Key, Value>::Node *
-rbtree<Key, Value>::getInOrderSuccessorNode(rbtree<Key, Value>::Node *p) {
+inline typename RBTree<Key, Value>::Node *
+RBTree<Key, Value>::GetInOrderSuccessorNode(RBTree<Key, Value>::Node *p) {
     p = p->right;
 
     while (p->left != nullptr) {
@@ -318,45 +325,47 @@ rbtree<Key, Value>::getInOrderSuccessorNode(rbtree<Key, Value>::Node *p) {
 }
 
 template <typename Key, typename Value>
-typename rbtree<Key, Value>::Node *rbtree<Key, Value>::insert(
-    rbtree<Key, Value>::Node *p, Key key, Value value) {
-    if (p == nullptr) return std::make_unique<Node>(key, value);
+typename RBTree<Key, Value>::Node *RBTree<Key, Value>::Insert(
+    RBTree<Key, Value>::Node *p, Key key, Value value) {
+    if (p == nullptr) {
+        return new Node(key, value);
+    }
 
     /* We view the left-leaning red black tree as a 2 3 4 tree. So first check
      * if p is a 4 node and needs to be "split" by flipping colors.  */
-    if (isRed(p->left) && isRed(p->right)) colorFlip(p);
+    if (IsRed(p->left) && IsRed(p->right)) ColorFlip(p);
 
     if (key == p->key) /* if key already exists, overwrite its value */
         p->value = value;
     else if (key < p->key) /* otherwise recurse */
-        p->left = insert(p->left, key, value);
+        p->left = Insert(p->left, key, value);
     else
-        p->right = insert(p->right, key, value);
+        p->right = Insert(p->right, key, value);
 
     /* rebalance tree */
-    if (isRed(p->right)) p = rotateLeft(p);
+    if (IsRed(p->right)) p = RotateLeft(p);
 
-    if (isRed(p->left) && isRed(p->left->left)) p = rotateRight(p);
+    if (IsRed(p->left) && IsRed(p->left->left)) p = RotateRight(p);
 
     return p;
 }
 template <typename Key, typename Value>
 template <typename Functor>
-inline void rbtree<Key, Value>::traverse(Functor f) {
-    return traverse(f, root);
+inline void RBTree<Key, Value>::Traverse(Functor f) {
+    return Traverse(f, root);
 }
 
 /* in order traversal */
 template <typename Key, typename Value>
 template <typename Functor>
-void rbtree<Key, Value>::traverse(Functor f, rbtree<Key, Value>::Node *root) {
+void RBTree<Key, Value>::Traverse(Functor f, RBTree<Key, Value>::Node *root) {
     if (root == nullptr) {
         return;
     }
 
-    traverse(f, root->left);
+    Traverse(f, root->left);
 
     f(root->value);
 
-    traverse(f, root->right);
+    Traverse(f, root->right);
 }
