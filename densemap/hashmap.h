@@ -8,9 +8,9 @@
 #include <type_traits>
 #include <utility>
 
-#include "alignof.h"
-#include "hashmap_info.h"
-#include "math_utils.h"
+#include "common/alignof.h"
+#include "common/math_utils.h"
+#include "densemap/hashmap_info.h"
 
 namespace detail {
 
@@ -35,7 +35,7 @@ class HashMapBase {
     template <typename T>
     using const_arg_type_t = typename const_pointer_or_const_ref<T>::type;
 
-   public:
+public:
     using size_type = unsigned;
     using key_type = KeyT;
     using mapped_type = ValueT;
@@ -268,7 +268,7 @@ class HashMapBase {
     /// determine whether an insertion caused the HashMap to reAllocate.
     const void *getPointerIntoBucketsArray() const { return getBuckets(); }
 
-   protected:
+protected:
     HashMapBase() = default;
 
     void DestroyAll() {
@@ -373,7 +373,7 @@ class HashMapBase {
 
     static const KeyT GetTombstoneKey() { return KeyInfoT::GetTombstoneKey(); }
 
-   private:
+private:
     iterator MakeIterator(BucketT *P, BucketT *E, bool NoAdvance = false) {
         return iterator(P, E, NoAdvance);
     }
@@ -558,7 +558,7 @@ class HashMapBase {
         return Result;
     }
 
-   public:
+public:
     /// Return the approximate size (in bytes) of the actual map.
     /// This is just the raw memory used by HashMap.
     /// If entries are pointers to objects, the size of the referenced objects
@@ -581,7 +581,7 @@ class HashMap : public HashMapBase<HashMap<KeyT, ValueT, KeyInfoT, BucketT>,
     unsigned num_to_mbstones_;
     unsigned num_buckets_;
 
-   public:
+public:
     /// Create a HashMap wth an optional \p InitialReserve that guarantee that
     /// this number of elements can be inserted in the map without Grow()
     explicit HashMap(unsigned InitialReserve = 0) { init(InitialReserve); }
@@ -685,7 +685,7 @@ class HashMap : public HashMapBase<HashMap<KeyT, ValueT, KeyInfoT, BucketT>,
         init(Newnum_buckets_);
     }
 
-   private:
+private:
     unsigned num_entries() const { return num_entries_; }
 
     void set_num_entries(unsigned Num) { num_entries_ = Num; }
@@ -738,7 +738,7 @@ class SmallHashMap
 
     AlignedCharArrayUnion<BucketT[InlineBuckets], LargeRep> storage;
 
-   public:
+public:
     explicit SmallHashMap(unsigned NumInitBuckets = 0) { init(NumInitBuckets); }
 
     SmallHashMap(const SmallHashMap &other) : BaseT() {
@@ -944,7 +944,7 @@ class SmallHashMap
         init(Newnum_buckets_);
     }
 
-   private:
+private:
     unsigned num_entries() const { return num_entries_; }
 
     void set_num_entries(unsigned Num) {
@@ -1014,7 +1014,7 @@ class HashMapIterator {
 
     using ConstIterator = HashMapIterator<KeyT, ValueT, KeyInfoT, Bucket, true>;
 
-   public:
+public:
     using difference_type = ptrdiff_t;
     using value_type =
         typename std::conditional<IsConst, const Bucket, Bucket>::type;
@@ -1022,11 +1022,11 @@ class HashMapIterator {
     using reference = value_type &;
     using iterator_category = std::forward_iterator_tag;
 
-   private:
+private:
     pointer ptr = nullptr;
     pointer end = nullptr;
 
-   public:
+public:
     HashMapIterator() = default;
 
     HashMapIterator(pointer Pos, pointer E, bool NoAdvance = false)
@@ -1058,7 +1058,7 @@ class HashMapIterator {
         return tmp;
     }
 
-   private:
+private:
     void AdvancePastEmptyBuckets() {
         assert(ptr <= end);
         const KeyT Empty = KeyInfoT::GetEmptyKey();

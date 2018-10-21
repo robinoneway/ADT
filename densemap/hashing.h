@@ -1,15 +1,10 @@
+#pragma once
 #include <algorithm>
 #include <cassert>
 #include <cstring>
 #include <string>
 #include <utility>
-
-namespace sys {
-template <typename T>
-inline void swapByteOrder(T &Value) {
-    Value = getSwappedBytes(Value);
-}
-}  // namespace sys
+#include "common/endian.h"
 class hash_code {
     size_t value;
 
@@ -56,16 +51,14 @@ namespace detail {
 inline uint64_t fetch64(const char *p) {
     uint64_t result;
     std::memcpy(&result, p, sizeof(result));
-    //  if (sys::IsBigEndianHost)
-    //    sys::swapByteOrder(result);
+    if (sys::IsBigEndianHost) sys::swapByteOrder(result);
     return result;
 }
 
 inline uint32_t fetch32(const char *p) {
     uint32_t result;
     memcpy(&result, p, sizeof(result));
-    //  if (sys::IsBigEndianHost)
-    //    sys::swapByteOrder(result);
+    if (sys::IsBigEndianHost) sys::swapByteOrder(result);
     return result;
 }
 
@@ -333,7 +326,7 @@ struct hash_combine_recursive_helper {
     hash_state state;
     const uint64_t seed;
 
-   public:
+public:
     hash_combine_recursive_helper() : seed(get_execution_seed()) {}
     template <typename T>
     char *combine_data(size_t &length, char *buffer_ptr, char *buffer_end,

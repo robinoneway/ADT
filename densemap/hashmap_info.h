@@ -2,14 +2,14 @@
 #include <cstddef>
 #include <cstdint>
 #include <utility>
-#include "hashing.h"
-#include "type_traits.h"
+#include "densemap/hashing.h"
+#include "common/type_traits.h"
 template <typename T>
 struct HashMapInfo {
-    // static inline T GetEmptyKey();
-    // static inline T GetTombstoneKey();
-    // static unsigned GetHashValue(const T &Val);
-    // static bool IsEqual(const T &lhs, const T &rhs);
+     static inline T GetEmptyKey();
+     static inline T GetTombstoneKey();
+     static unsigned GetHashValue(const T &Val);
+     static bool IsEqual(const T &lhs, const T &rhs);
 };
 
 // Provide HashMapInfo for all pointers.

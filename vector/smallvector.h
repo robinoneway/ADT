@@ -11,8 +11,8 @@
 #include <type_traits>
 #include <utility>
 
-#include "alignof.h"
-#include "math_utils.h"
+#include "common/alignof.h"
+#include "common/math_utils.h"
 class SmallVectorBase {
 protected:
     void *beginx_;
